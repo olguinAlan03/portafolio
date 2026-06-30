@@ -27,6 +27,16 @@ function LinkedinIcon({ size = 24 }) {
   );
 }
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const handle = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+  return width;
+}
+
 const THEMES = {
   dark: {
     bg: "#0B1220",
@@ -120,7 +130,8 @@ const CERTIFICATIONS = [
     name: "Aspire Leaders Program",
     issuer: "Aspire Institute (afiliado a Harvard)",
     period: "2026",
-    description: "Programa de liderazgo de 9 semanas con masterclasses de profesores de Harvard. Red de más de 100,000 alumni en 190 países.",
+    description:
+      "Programa de liderazgo de 9 semanas con masterclasses de profesores de Harvard. Red de más de 100,000 alumni en 190 países.",
   },
 ];
 
@@ -128,6 +139,11 @@ export default function App() {
   const [mode, setMode] = useState("dark");
   const [scrolled, setScrolled] = useState(false);
   const t = THEMES[mode];
+
+  const width = useWindowWidth();
+  const isMobile = width < 640;
+  const isDesktop = width >= 1024;
+  const px = isMobile ? "20px" : isDesktop ? "40px" : "28px";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -164,7 +180,7 @@ export default function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: scrolled ? "14px 32px" : "22px 32px",
+          padding: scrolled ? `14px ${px}` : `22px ${px}`,
           background: scrolled ? `${t.bg}E6` : "transparent",
           backdropFilter: scrolled ? "blur(8px)" : "none",
           borderBottom: scrolled ? `1px solid ${t.border}` : "1px solid transparent",
@@ -183,28 +199,28 @@ export default function App() {
         </span>
 
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-          {["Sobre mí", "Habilidades", "Proyectos", "Experiencia", "Contacto"].map((label, i) => {
-            const ids = ["sobre-mi", "habilidades", "proyectos", "experiencia", "contacto"];
-            return (
-              <button
-                key={label}
-                onClick={() => scrollTo(ids[i])}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: t.textMuted,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  display: window.innerWidth < 720 ? "none" : "block",
-                }}
-                onMouseEnter={(e) => (e.target.style.color = t.text)}
-                onMouseLeave={(e) => (e.target.style.color = t.textMuted)}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {!isMobile &&
+            ["Sobre mí", "Habilidades", "Proyectos", "Experiencia", "Contacto"].map((label, i) => {
+              const ids = ["sobre-mi", "habilidades", "proyectos", "experiencia", "contacto"];
+              return (
+                <button
+                  key={label}
+                  onClick={() => scrollTo(ids[i])}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: t.textMuted,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = t.text)}
+                  onMouseLeave={(e) => (e.target.style.color = t.textMuted)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           <button
             onClick={() => setMode(mode === "dark" ? "light" : "dark")}
             aria-label="Cambiar tema"
@@ -229,29 +245,22 @@ export default function App() {
       {/* Hero */}
       <section
         style={{
-          maxWidth: 1080,
+          maxWidth: 1280,
           margin: "0 auto",
-          padding: "80px 32px 100px",
+          padding: isMobile ? `60px ${px} 80px` : `80px ${px} 100px`,
           display: "grid",
-          gridTemplateColumns: "1.3fr 0.9fr",
-          gap: 48,
+          gridTemplateColumns: isDesktop ? "1.3fr 0.9fr" : "1fr",
+          gap: isDesktop ? 48 : 40,
           alignItems: "center",
         }}
       >
         <div>
-          <div
-            style={{
-              width: 28,
-              height: 3,
-              background: t.accent,
-              marginBottom: 24,
-            }}
-          />
+          <div style={{ width: 28, height: 3, background: t.accent, marginBottom: 24 }} />
           <h1
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontWeight: 700,
-              fontSize: "clamp(36px, 5vw, 56px)",
+              fontSize: isMobile ? "clamp(32px, 10vw, 44px)" : "clamp(36px, 5vw, 56px)",
               lineHeight: 1.08,
               margin: "0 0 16px",
               letterSpacing: "-0.02em",
@@ -263,7 +272,7 @@ export default function App() {
           </h1>
           <p
             style={{
-              fontSize: 19,
+              fontSize: isMobile ? 16 : 19,
               color: t.textMuted,
               margin: "0 0 8px",
               fontWeight: 500,
@@ -273,8 +282,8 @@ export default function App() {
             <span style={{ color: t.text }}>|</span> Web & Mobile
           </p>
           <p style={{ fontSize: 15, color: t.textMuted, margin: "0 0 32px", maxWidth: 460 }}>
-            Construyo soluciones de extremo a extremo: de la base de datos a
-            la pantalla del usuario, y cada vez más, a tu bolsillo.
+            Construyo soluciones de extremo a extremo: de la base de datos a la pantalla del
+            usuario, y cada vez más, a tu bolsillo.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -344,8 +353,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* Signature visual: layered "stack" card */}
-        <div style={{ position: "relative", height: 340 }}>
+        {/* Layered stack visual — single column on mobile sits below text naturally */}
+        <div
+          style={{
+            position: "relative",
+            height: isMobile ? 220 : isDesktop ? 340 : 280,
+          }}
+        >
           {[
             { label: "mobile/", sub: "Ionic · Android Studio", offset: 0, color: t.accent2 },
             { label: "frontend/", sub: "React · Angular", offset: 56, color: t.accent },
@@ -363,15 +377,16 @@ export default function App() {
                 borderRadius: 10,
                 padding: "16px 20px",
                 fontFamily: "'JetBrains Mono', monospace",
-                boxShadow: mode === "dark" ? "0 12px 24px rgba(0,0,0,0.35)" : "0 12px 24px rgba(0,0,0,0.06)",
+                boxShadow:
+                  mode === "dark"
+                    ? "0 12px 24px rgba(0,0,0,0.35)"
+                    : "0 12px 24px rgba(0,0,0,0.06)",
               }}
             >
               <span style={{ color: layer.color, fontSize: 14, fontWeight: 500 }}>
                 {layer.label}
               </span>
-              <p style={{ margin: "6px 0 0", fontSize: 12, color: t.textMuted }}>
-                {layer.sub}
-              </p>
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: t.textMuted }}>{layer.sub}</p>
             </div>
           ))}
         </div>
@@ -380,31 +395,41 @@ export default function App() {
       {/* Sobre mí */}
       <section
         id="sobre-mi"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Sobre mí" t={t} />
-        <p style={{ fontSize: 18, lineHeight: 1.7, color: t.text, maxWidth: 720 }}>
-          Soy Ingeniero en Sistemas Computacionales enfocado en desarrollo
-          full stack. He trabajado con Angular, React y Scala en sistemas
-          empresariales multi-módulo, y actualmente desarrollo en WordPress y
-          PHP para una plataforma inmobiliaria. Construyo mis propias
-          aplicaciones móviles —con Ionic/Capacitor y Android Studio— y estoy
+        <p
+          style={{
+            fontSize: isMobile ? 16 : 18,
+            lineHeight: 1.7,
+            color: t.text,
+            maxWidth: 720,
+          }}
+        >
+          Soy Ingeniero en Sistemas Computacionales enfocado en desarrollo full stack. He
+          trabajado con Angular, React y Scala en sistemas empresariales multi-módulo, y
+          actualmente desarrollo en WordPress y PHP para una plataforma inmobiliaria. Construyo
+          mis propias aplicaciones móviles —con Ionic/Capacitor y Android Studio— y estoy
           profundizando mi especialización hacia mobile. Graduado del{" "}
-          <strong>Aspire Leaders Program</strong> (Harvard), con enfoque en
-          liderazgo y trabajo colaborativo.
+          <strong>Aspire Leaders Program</strong> (Harvard), con enfoque en liderazgo y trabajo
+          colaborativo.
         </p>
       </section>
 
       {/* Habilidades */}
       <section
         id="habilidades"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Habilidades" t={t} />
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : isDesktop
+              ? "repeat(4, 1fr)"
+              : "repeat(2, 1fr)",
             gap: 16,
           }}
         >
@@ -418,14 +443,7 @@ export default function App() {
                 padding: "20px 22px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 14,
-                }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <Icon size={18} color={t.accent} />
                 <span style={{ fontWeight: 600, fontSize: 15 }}>{label}</span>
               </div>
@@ -454,13 +472,13 @@ export default function App() {
       {/* Proyectos */}
       <section
         id="proyectos"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Proyectos" t={t} />
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
             gap: 20,
           }}
         >
@@ -503,6 +521,7 @@ export default function App() {
                     borderRadius: 20,
                     padding: "3px 10px",
                     whiteSpace: "nowrap",
+                    marginLeft: 12,
                   }}
                 >
                   {p.tag}
@@ -552,7 +571,7 @@ export default function App() {
       {/* Experiencia */}
       <section
         id="experiencia"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Experiencia" t={t} />
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -561,8 +580,8 @@ export default function App() {
               key={exp.role + i}
               style={{
                 display: "grid",
-                gridTemplateColumns: "160px 1fr",
-                gap: 24,
+                gridTemplateColumns: isMobile ? "1fr" : "160px 1fr",
+                gap: isMobile ? 4 : 24,
                 padding: "22px 0",
                 borderTop: i === 0 ? "none" : `1px solid ${t.border}`,
               }}
@@ -595,7 +614,7 @@ export default function App() {
       {/* Educación */}
       <section
         id="educacion"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Formación académica" t={t} />
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -604,8 +623,8 @@ export default function App() {
               key={ed.degree}
               style={{
                 display: "grid",
-                gridTemplateColumns: "160px 1fr",
-                gap: 24,
+                gridTemplateColumns: isMobile ? "1fr" : "160px 1fr",
+                gap: isMobile ? 4 : 24,
                 padding: "22px 0",
                 borderTop: i === 0 ? "none" : `1px solid ${t.border}`,
               }}
@@ -623,9 +642,7 @@ export default function App() {
                 <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600 }}>
                   {ed.degree}
                 </h4>
-                <p style={{ margin: 0, fontSize: 13.5, color: t.accent }}>
-                  {ed.school}
-                </p>
+                <p style={{ margin: 0, fontSize: 13.5, color: t.accent }}>{ed.school}</p>
               </div>
             </div>
           ))}
@@ -635,7 +652,7 @@ export default function App() {
       {/* Certificaciones */}
       <section
         id="certificaciones"
-        style={{ maxWidth: 1080, margin: "0 auto", padding: "40px 32px 100px" }}
+        style={{ maxWidth: 1280, margin: "0 auto", padding: `40px ${px} 100px` }}
       >
         <SectionLabel text="Certificaciones" t={t} />
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -644,8 +661,8 @@ export default function App() {
               key={cert.name}
               style={{
                 display: "grid",
-                gridTemplateColumns: "160px 1fr",
-                gap: 24,
+                gridTemplateColumns: isMobile ? "1fr" : "160px 1fr",
+                gap: isMobile ? 4 : 24,
                 padding: "22px 0",
                 borderTop: i === 0 ? "none" : `1px solid ${t.border}`,
               }}
@@ -679,9 +696,9 @@ export default function App() {
       <section
         id="contacto"
         style={{
-          maxWidth: 1080,
+          maxWidth: 1280,
           margin: "0 auto",
-          padding: "40px 32px 120px",
+          padding: `40px ${px} 120px`,
           textAlign: "center",
         }}
       >
@@ -690,7 +707,7 @@ export default function App() {
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(28px, 4vw, 40px)",
+            fontSize: isMobile ? "clamp(24px, 7vw, 32px)" : "clamp(28px, 4vw, 40px)",
             margin: "0 0 16px",
             letterSpacing: "-0.02em",
           }}
@@ -707,12 +724,13 @@ export default function App() {
             color: "#fff",
             padding: "13px 28px",
             borderRadius: 8,
-            fontSize: 14,
+            fontSize: isMobile ? 13 : 14,
             fontWeight: 500,
             textDecoration: "none",
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
+            wordBreak: "break-all",
           }}
         >
           <Mail size={16} /> olguinalanbrayan@gmail.com
@@ -722,7 +740,7 @@ export default function App() {
       <footer
         style={{
           borderTop: `1px solid ${t.border}`,
-          padding: "24px 32px",
+          padding: `24px ${px}`,
           textAlign: "center",
           fontSize: 12.5,
           color: t.textMuted,
