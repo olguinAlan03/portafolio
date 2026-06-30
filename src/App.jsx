@@ -146,6 +146,11 @@ export default function App() {
   const px = isMobile ? "20px" : isDesktop ? "40px" : "28px";
 
   useEffect(() => {
+    document.body.style.background = t.bg;
+    document.documentElement.style.background = t.bg;
+  }, [t.bg]);
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
